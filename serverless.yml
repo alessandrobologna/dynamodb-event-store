@@ -1,0 +1,161 @@
+service: 
+  name: ${{env:SERVICE, 'event-store'}}
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  variableSyntax: "\\${{([\\s\\S]+?)}}" 
+  stage: ${{opt:stage, 'dev'}}
+  tracing: true 
+  environment:
+    KINESIS_STREAM: ${{self:service}}-${{self:provider.stage}}-stream
+    KINESIS_FIREHOSE: ${{self:service}}-${{self:provider.stage}}-firehose
+    S3_BUCKET: ${{self:service}}-${{self:provider.stage}}-bucket
+    DYNAMO_BUFFER_TABLE: ${{self:service}}-${{self:provider.stage}}-buffer-table
+    DYNAMO_EVENT_TABLE: ${{self:service}}-${{self:provider.stage}}-event-table
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - xray:PutTelemetryRecords
+        - xray:PutTraceSegments
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "kinesis:PutRecord"
+      Resource:
+        - Fn::GetAtt:
+          - EventStream
+          - Arn
+plugins:
+  - serverless-plugin-tracing
+  - serverless-apigw-binary
+
+custom:
+  apigwBinary:
+    types:          
+      - 'image/gif'
+
+functions:
+  load:
+    handler: src/main/js/lambda/load/index.handler
+    environment:
+      STREAM_NAME: 
+        Ref: EventStream
+    events:
+      - http:
+          path: track.gif
+          method: get
+          response:
+  
+  scan:
+    handler: src/main/js/lambda/scan/index.handler
+    timeout: 300 
+    memorySize: 1500 
+    environment:
+      DYNAMO_BUFFER_TABLE: "${{self:provider.environment.DYNAMO_BUFFER_TABLE}}"
+      DYNAMO_EVENT_TABLE:  "${{self:provider.environment.DYNAMO_EVENT_TABLE}}"
+      STREAM_NAME: 
+        Ref: EventStream
+    events:
+      - schedule: rate(1 minute)
+  pump:
+    handler: src/main/js/lambda/pump/index.handler
+    timeout: 300 
+    memorySize: 1500 
+    environment:
+      DYNAMO_BUFFER_TABLE: "${{self:provider.environment.DYNAMO_BUFFER_TABLE}}"
+    events:
+      - stream:
+          type: kinesis
+          arn:
+            Fn::GetAtt:
+              - EventStream
+              - Arn
+          batchSize: 500
+          startingPosition: TRIM_HORIZON
+
+package:
+  include:
+    - src/main/js/lambda/**
+    - node_modules/**
+  exclude:
+    - ./**
+
+resources:
+  Description: DynamoDB Event Store
+  Resources:
+    EventStore:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: ${{self:provider.environment.DYNAMO_EVENT_TABLE}}
+        AttributeDefinitions:
+          - AttributeName: event_time_slot
+            AttributeType: S
+          - AttributeName: event_time_stamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: event_time_slot
+            KeyType: HASH
+          - AttributeName: event_time_stamp
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 10
+          WriteCapacityUnits: 50
+    EventBuffer:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: ${{self:provider.environment.DYNAMO_BUFFER_TABLE}}
+        AttributeDefinitions:
+          - AttributeName: partition_key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: partition_key
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 100
+          WriteCapacityUnits: 100
+    EventStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: ${{self:provider.environment.KINESIS_STREAM}}
+        ShardCount: 1
+
+  Outputs:
+    EventStream:
+      Description: Event Stream name
+      Value:
+        'Ref': EventStream
+    EventStreamARN:
+      Description: Event Stream ARN
+      Value:
+        'Fn::GetAtt':
+          - EventStream
+          - Arn
+    EventStore:
+      Description: Event Store DynamoDB Table name
+      Value:
+        'Ref': EventStore
+    EventStoreARN:
+      Description: Event Store DynamoDB Table ARN
+      Value:
+        'Fn::GetAtt':
+          - EventStore
+          - Arn
+    EventBuffer:
+      Description: Event Buffer DynamoDB Table name
+      Value:
+        'Ref': EventBuffer
+    EventBufferARN:
+      Description: Event Buffer DynamoDB Table ARN
+      Value:
+        'Fn::GetAtt':
+          - EventBuffer
+          - Arn

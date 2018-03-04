@@ -1,0 +1,22 @@
+{
+  "name": "dynamodb-event-store",
+  "version": "1.0.0",
+  "description": "Sample dynamodb based event store",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alessandrobologna/dynamodb-event-store.git"
+  },
+  "author": "Alessandro Bologna",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alessandrobologna/dynamodb-event-store/issues"
+  },
+  "homepage": "https://github.com/alessandrobologna/dynamodb-event-store#readme",
+  "dependencies": {
+    "aws-xray-sdk": "^1.1.4"
+  },
+  "devDependencies": {
+    "serverless-apigw-binary": "^0.4.4",
+    "serverless-plugin-tracing": "^2.0.0"
+  }
+}
