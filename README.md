@@ -24,6 +24,7 @@ This provides an optimal resource utilization, as writes are spread across parti
 
 
 **Predictable partition key and time based range key**
+
 |Partition Key|Range Key|Data|
 |----|----|----|
 |2018-03-04T14:59:44.000Z|2018-03-04T14:59:44.030Z|{"foo":10}| 
