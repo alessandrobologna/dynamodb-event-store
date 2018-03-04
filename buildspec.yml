@@ -1,0 +1,19 @@
+version: 0.2
+
+env:
+  variables:
+  parameter-store:
+    
+phases:
+  install:
+    commands:
+      - npm -g install serverless
+  pre_build:
+    commands:
+      - npm install
+  build:
+    commands:
+      - sls deploy
+  post_build:
+    commands:
+ 
