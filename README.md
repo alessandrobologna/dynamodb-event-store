@@ -1,5 +1,4 @@
-![codebuild](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieUNIR0o0d0tpRmJab0huNkxETitablhCYWNmc3l0d0pLanRIbFQyRlJmNmRRQ2lTcGFhZUZyR3VjeEx3ZEwxdVRLOUozb0tyQWdtbm9iTXcwaGpxOXRJPSIsIml2UGFyYW1ldGVyU3BlYyI6IlJSWldUMW5TNHpCTzBGMzIiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
-# dynamodb-event-store
+# dynamodb-event-store   ![codebuild](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieUNIR0o0d0tpRmJab0huNkxETitablhCYWNmc3l0d0pLanRIbFQyRlJmNmRRQ2lTcGFhZUZyR3VjeEx3ZEwxdVRLOUozb0tyQWdtbm9iTXcwaGpxOXRJPSIsIml2UGFyYW1ldGVyU3BlYyI6IlJSWldUMW5TNHpCTzBGMzIiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 Simple Event Store for DynamoDB
 
 ![diagram](art/diagram.png)
