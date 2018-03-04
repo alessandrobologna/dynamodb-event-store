@@ -41,7 +41,7 @@ plugins:
 custom:
   apigwBinary:
     types:          
-      - 'image/gif'
+      - '*/*'
 
 functions:
   load:
