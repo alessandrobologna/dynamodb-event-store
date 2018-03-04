@@ -3,7 +3,7 @@ Simple Event Store for DynamoDB
 
 ![diagram](art/diagram.png)
 ## What is it?
-This is a proof of concept implementation to store a log of time based events (in this case from Kinesis) to a NoSQL database like DynamoDB. While it's certainly not ready for production use (you have been warned), it could evolve into a robust solution easily.
+This is a *proof of concept* implementation to store a log of time based events (in this case from Kinesis) to a NoSQL database like DynamoDB. While it's certainly not ready for production use (you have been warned), it could evolve into a robust solution easily.
 
 The idea is to be able to store events when they are happening, and to have a way to play them back sequentially from an arbitrary point in time. This is very useful for Event Sourcing.
 
