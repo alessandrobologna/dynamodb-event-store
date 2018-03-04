@@ -1,11 +1,11 @@
-# dynamodb-event-store
+# dynamodb-event-store   ![codebuild](https://codebuild.us-east-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoieUNIR0o0d0tpRmJab0huNkxETitablhCYWNmc3l0d0pLanRIbFQyRlJmNmRRQ2lTcGFhZUZyR3VjeEx3ZEwxdVRLOUozb0tyQWdtbm9iTXcwaGpxOXRJPSIsIml2UGFyYW1ldGVyU3BlYyI6IlJSWldUMW5TNHpCTzBGMzIiLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 Simple Event Store for DynamoDB
 
 ![diagram](art/diagram.png)
 ## What is it?
-This is a *proof of concept* implementation to store a log of time based events (in this case from Kinesis) to a NoSQL database like DynamoDB. While it's certainly not ready for production use (you have been warned), it could evolve into a robust solution easily.
+This is a *proof of concept* implementation to store a log of time based events (in this case from Kinesis) to a NoSQL database like DynamoDB. While it's certainly not ready for production use (you have been warned), it could evolve into a robust solution easily -- I think.
 
-The idea is to be able to store events when they are happening, and to have a way to play them back sequentially from an arbitrary point in time. This is very useful for Event Sourcing.
+The idea is to be able to store events when they are happening, and to have a way to play them back sequentially from an arbitrary point in time. This is very useful for Event Sourcing, to keep the ledger of events for a potentially infinite amount of data and time, when the Event Stream may be offering limited retention.
 
 The problem with storing time based events in DynamoDB, in fact, is not trivial. The main issue is that using a naive partition key/range key schema will typically face the [hot key/partition problem](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GuidelinesForTables.html), or size limitations for the partition, or make it impossible to play events back in sequence.
 
@@ -24,6 +24,7 @@ This provides an optimal resource utilization, as writes are spread across parti
 
 
 **Predictable partition key and time based range key**
+
 |Partition Key|Range Key|Data|
 |----|----|----|
 |2018-03-04T14:59:44.000Z|2018-03-04T14:59:44.030Z|{"foo":10}| 
