@@ -48,7 +48,7 @@ Please note that in this POC, the partion key used for the buffer table is actua
 To load test, there's also an ApiGateway *load* lambda that can be invoked with something like apache benchmark and returns a single pixel after having pushed the request object data in kinesis.  For instance, running:
 
 ```bash
-ab -k -n 1000 -c 10  https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif
+$ ab -k -n 1000 -c 10  https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif
 ```
 
 you will be pushing 1,000 events (from 10 clients) into kinesis and the dynamodb event store. 
@@ -62,7 +62,40 @@ and push actual click stream data into your event store.
 In this implementation, the playback of events targets a separate Kinesis stream.
 You can test it by running 
 ```bash
- sls invoke local -f playback
+$ sls invoke local -f playback
+
+Starting event playback on event-store-dev-event-table from 2018-03-16T19:56:02.000Z to 2018-03-16T19:56:32.000Z
+2018-03-16T19:56:02.000Z
+2018-03-16T19:56:03.000Z: 2018-03-16T19:56:03.801Z [3]
+2018-03-16T19:56:04.000Z: 2018-03-16T19:56:04.036Z [9]
+2018-03-16T19:56:05.000Z: 2018-03-16T19:56:05.041Z [25]
+2018-03-16T19:56:06.000Z: 2018-03-16T19:56:06.034Z [32]
+2018-03-16T19:56:07.000Z: 2018-03-16T19:56:07.012Z [40]
+2018-03-16T19:56:08.000Z: 2018-03-16T19:56:08.002Z [32]
+2018-03-16T19:56:09.000Z: 2018-03-16T19:56:09.016Z [39]
+2018-03-16T19:56:10.000Z: 2018-03-16T19:56:10.006Z [37]
+2018-03-16T19:56:11.000Z: 2018-03-16T19:56:11.020Z [43]
+2018-03-16T19:56:12.000Z: 2018-03-16T19:56:12.038Z [41]
+2018-03-16T19:56:13.000Z: 2018-03-16T19:56:13.007Z [41]
+2018-03-16T19:56:14.000Z: 2018-03-16T19:56:14.009Z [39]
+2018-03-16T19:56:15.000Z: 2018-03-16T19:56:15.002Z [40]
+2018-03-16T19:56:16.000Z: 2018-03-16T19:56:16.063Z [31]
+2018-03-16T19:56:17.000Z: 2018-03-16T19:56:17.034Z [14]
+2018-03-16T19:56:18.000Z: 2018-03-16T19:56:18.010Z [36]
+2018-03-16T19:56:19.000Z: 2018-03-16T19:56:19.015Z [41]
+2018-03-16T19:56:20.000Z: 2018-03-16T19:56:20.000Z [36]
+2018-03-16T19:56:21.000Z: 2018-03-16T19:56:21.005Z [42]
+2018-03-16T19:56:22.000Z: 2018-03-16T19:56:22.018Z [44]
+2018-03-16T19:56:23.000Z: 2018-03-16T19:56:23.062Z [43]
+2018-03-16T19:56:24.000Z: 2018-03-16T19:56:24.013Z [40]
+2018-03-16T19:56:25.000Z: 2018-03-16T19:56:25.005Z [41]
+2018-03-16T19:56:26.000Z: 2018-03-16T19:56:26.015Z [41]
+2018-03-16T19:56:27.000Z: 2018-03-16T19:56:27.008Z [33]
+2018-03-16T19:56:28.000Z: 2018-03-16T19:56:28.005Z [36]
+2018-03-16T19:56:29.000Z: 2018-03-16T19:56:29.032Z [42]
+2018-03-16T19:56:30.000Z: 2018-03-16T19:56:30.000Z [43]
+2018-03-16T19:56:31.000Z: 2018-03-16T19:56:31.009Z [12]
+"Success"
  ``` 
  which, by default, will push the last 15 minutes of event in the playback stream.
 
@@ -79,15 +112,15 @@ The following Lambda functions are deployed as part of this project:
 ### How to run it
 The code is written using the serverless framework, so just install it with:
 ```bash
-npm -g install serverless
+$ npm -g install serverless
 ```
 Then, clone this project, install all the dependencies and deploy: 
 ```bash
-npm install && sls deploy
+$ npm install && sls deploy
 ```
 At the end, the tables, the kinesis stream and the lambda functions are deployed, and you can start using it. Just using a simple curl command:
 ```bash
-curl -v https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif
+$ curl -v https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif
 ```
 and then verify that records are placed in the buffer table and then moved to the event table.
 
