@@ -51,13 +51,14 @@ To load test, there's also an ApiGateway *load* lambda that can be invoked with 
 ab -k -n 1000 -c 10  https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif
 ```
 
-you will be pushing 1,000 events into kinesis and the dynamodb event store. 
+you will be pushing 1,000 events (from 10 clients) into kinesis and the dynamodb event store. 
 
-You could also put the url in a web page in a higly trafficed site with something like the following:
+You could also put the url in a web page in a highly trafficed site with something like the following:
 ```html
 <img src="https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif">
 ```
 and push actual click stream data into your event store.
+
 In this implementation, the playback of events targets a separate Kinesis stream.
 You can test it by running 
 ```bash
@@ -65,7 +66,7 @@ You can test it by running
  ``` 
  which, by default, will push the last 15 minutes of event in the playback stream.
 
-The idea is that if you ever need to playback events, you can avoid saturating the main event stream, and you don't need to mark events as a "special" playback event. The downside, of course, is that you will need to subscribe to both the event and the playback stream.
+The idea is that, if you ever need to playback events, you can avoid saturating the main event stream, and you don't need to mark events as a "special" playback event. The downside, of course, is that you will need to subscribe to both the event and the playback stream.
 
 ### Functions
 The following Lambda functions are deployed as part of this project:
@@ -91,6 +92,6 @@ curl -v https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif
 and then verify that records are placed in the buffer table and then moved to the event table.
 
 ### Notes
-This project is also using AWS x-ray to provide resource utilization metrics.
+This project is also using AWS X-ray to provide resource utilization metrics.
 The default capacity set for the DynamoDB *buffer* table is 100 reads, 100 writes. The capacity for the event table is 10 reads, 50 writes. This can be adequate for a small to medium load.
 Using DynamoDB autoscaling may also work well for moderately spiking load.
