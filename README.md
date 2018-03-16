@@ -58,6 +58,16 @@ You could also put the url in a web page in a higly trafficed site with somethin
 <img src="https://xxxx.execute-api.us-east-1.amazonaws.com/dev/track.gif">
 ```
 and push actual click stream data into your event store.
+In this implementation, the playback of events targets a separate Kinesis stream.
+The idea is that if you ever need to playback event, you can avoid saturating the main event stream, and you don't need to mark events as a "special" playback event. The downside, of course, is that you will need to subscribe to both the event and the playback stream.
+
+### Functions
+The following Lambda functions are deployed as part of this project:
+* **load**: _Load events into Kinesis from API gateway_. This is an extremely simple load simulator, that you can easily trigger with Apache Benchmark or any other web load testing tools.
+* **pump**: _Push events from Kinesis in the DynamoDB buffer table with a well distributed partition key_. This function will subscribe to the event stream, and duly copy any record into the buffer table, using as partition key an hash of the actual message.
+* **scan**: _Periodically scan the buffer table and store any new record into the event table_. This is an example of a "forking lambda", as it will scan the buffer table and fork new copies of itself to finish the task when there are more records that can be returned in a single scan operation.
+
+* **playback**: _Load events from the DynamoDB event store into the playback Kinesis stream_. This is a sample implementation for a playback function. It can be invoked directly with `sls invoke local -f playback -p src/main/js/lambda/playback/test.json ` where test.json contains a `start` and an `end` timestamp to define the window of events to playback. If invoked without parameters, it will default to playing back the last 15 minutes of events.
 
 ### How to run it
 The code is written using the serverless framework, so just install it with:
