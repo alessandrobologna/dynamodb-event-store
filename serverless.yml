@@ -8,8 +8,8 @@ provider:
   stage: ${{opt:stage, 'dev'}}
   tracing: true 
   environment:
-    KINESIS_STREAM: ${{self:service}}-${{self:provider.stage}}-stream
-    KINESIS_FIREHOSE: ${{self:service}}-${{self:provider.stage}}-firehose
+    EVENT_STREAM: ${{self:service}}-${{self:provider.stage}}-stream
+    PLAYBACK_STREAM: ${{self:service}}-${{self:provider.stage}}-playback
     S3_BUCKET: ${{self:service}}-${{self:provider.stage}}-bucket
     DYNAMO_BUFFER_TABLE: ${{self:service}}-${{self:provider.stage}}-buffer-table
     DYNAMO_EVENT_TABLE: ${{self:service}}-${{self:provider.stage}}-event-table
@@ -30,48 +30,46 @@ provider:
     - Effect: "Allow"
       Action:
         - "kinesis:PutRecord"
+        - "kinesis:PutRecords"
       Resource:
         - Fn::GetAtt:
           - EventStream
           - Arn
+        - Fn::GetAtt:
+          - PlaybackStream
+          - Arn
 plugins:
   - serverless-plugin-tracing
   - serverless-apigw-binary
+  - serverless-webpack
 
 custom:
+  webpackIncludeModules: true
   apigwBinary:
     types:          
       - '*/*'
 
 functions:
+  playback:
+    handler: src/main/js/lambda/playback/index.handler
+    timeout: 300 
+    memorySize: 1500 
   load:
     handler: src/main/js/lambda/load/index.handler
-    environment:
-      STREAM_NAME: 
-        Ref: EventStream
     events:
       - http:
           path: track.gif
           method: get
-          response:
-  
   scan:
     handler: src/main/js/lambda/scan/index.handler
     timeout: 300 
     memorySize: 1500 
-    environment:
-      DYNAMO_BUFFER_TABLE: "${{self:provider.environment.DYNAMO_BUFFER_TABLE}}"
-      DYNAMO_EVENT_TABLE:  "${{self:provider.environment.DYNAMO_EVENT_TABLE}}"
-      STREAM_NAME: 
-        Ref: EventStream
     events:
       - schedule: rate(1 minute)
   pump:
     handler: src/main/js/lambda/pump/index.handler
     timeout: 300 
     memorySize: 1500 
-    environment:
-      DYNAMO_BUFFER_TABLE: "${{self:provider.environment.DYNAMO_BUFFER_TABLE}}"
     events:
       - stream:
           type: kinesis
@@ -125,7 +123,12 @@ resources:
     EventStream:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: ${{self:provider.environment.KINESIS_STREAM}}
+        Name: ${{self:provider.environment.EVENT_STREAM}}
+        ShardCount: 1
+    PlaybackStream:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: ${{self:provider.environment.PLAYBACK_STREAM}}
         ShardCount: 1
 
   Outputs:
@@ -138,6 +141,16 @@ resources:
       Value:
         'Fn::GetAtt':
           - EventStream
+          - Arn
+    PlaybackStream:
+      Description: Playback Stream name
+      Value:
+        'Ref': PlaybackStream
+    PlaybackStreamARN:
+      Description: Playback Stream ARN
+      Value:
+        'Fn::GetAtt':
+          - PlaybackStream
           - Arn
     EventStore:
       Description: Event Store DynamoDB Table name
