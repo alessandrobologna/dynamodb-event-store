@@ -59,9 +59,11 @@ You could also put the url in a web page in a higly trafficed site with somethin
 ```
 and push actual click stream data into your event store.
 In this implementation, the playback of events targets a separate Kinesis stream.
-You can test it by running ```bash
+You can test it by running 
+```bash
  sls invoke local -f playback
- ``` which, by default, will push the last 15 minutes of event in the playback stream.
+ ``` 
+ which, by default, will push the last 15 minutes of event in the playback stream.
 
 The idea is that if you ever need to playback events, you can avoid saturating the main event stream, and you don't need to mark events as a "special" playback event. The downside, of course, is that you will need to subscribe to both the event and the playback stream.
 
