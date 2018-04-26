@@ -13,22 +13,11 @@
   },
   "homepage": "https://github.com/alessandrobologna/dynamodb-event-store#readme",
   "dependencies": {
-    "aws-xray-sdk": "^1.2.0",
-    "babel-runtime": "^6.26.0",
-    "source-map-support": "^0.4.18"
+    "aws-xray-sdk": "^1.2.0"
   },
   "devDependencies": {
     "aws-sdk": "^2.205.0",
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-plugin-source-map-support": "^1.0.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-stage-3": "^6.24.1",
     "serverless-apigw-binary": "^0.4.4",
-    "serverless-plugin-tracing": "^2.0.0",
-    "serverless-webpack": "^4.4.0",
-    "webpack": "^3.11.0",
-    "webpack-node-externals": "^1.6.0"
+    "serverless-plugin-tracing": "^2.0.0"
   }
 }

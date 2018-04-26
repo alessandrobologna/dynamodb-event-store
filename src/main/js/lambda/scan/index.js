@@ -7,13 +7,13 @@ const lambda = new AWS.Lambda({
     region: process.env.AWS_REGION
 });
 
-const timeUnit = parseInt(process.env.DECODE_PAYLOAD || "1000");
+const timeUnit = parseInt(process.env.TIME_UNIT || "1000");
 const decodePayload = "true" === (process.env.DECODE_PAYLOAD || "true")
 
 /*
  * Periodically scan the buffer table and  store into the event table 
  */
-export const handler = async (event, context, callback) => {
+exports.handler = async (event, context, callback) => {
     const params = {
         TableName: process.env.DYNAMO_BUFFER_TABLE,
         Limit: 500
@@ -56,9 +56,11 @@ export const handler = async (event, context, callback) => {
                     Item: {
                         event_time_slot: new Date(Math.floor(record.event_time_stamp / timeUnit) * timeUnit).toISOString(),
                         event_time_stamp: new Date(record.event_time_stamp).toISOString(),
+                        event_id: record.event_id,
                         record_payload: record.record_payload
                     }
                 }).promise()
+                // if the put calls fails, an exception will be thrown and the delete method will not be invoked
                 const deleteResponse = await dynamoDb.delete({
                     TableName: process.env.DYNAMO_BUFFER_TABLE,
                     Key: {

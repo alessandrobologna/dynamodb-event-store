@@ -6,15 +6,13 @@ const kinesis = new AWS.Kinesis({
     region: process.env.AWS_REGION
 });
 
-import crypto from 'crypto';
-
-const timeUnit = parseInt(process.env.DECODE_PAYLOAD || "1000");
+const timeUnit = parseInt(process.env.TIME_UNIT || "1000");
 
 /*
  * Load events from the DynamoDB event store into the playback Kinesis stream 
  */
 
-export const handler = async (event, context, callback) => {
+exports.handler = async (event, context, callback) => {
     event = event || {}
     // if no event.start is provided, start from 1 hour ago
     event.start = event.start || new Date(Math.floor(new Date() / timeUnit - 15 * 60) * timeUnit).toISOString();
@@ -34,25 +32,24 @@ export const handler = async (event, context, callback) => {
             while (true) {
                 const records = await dynamoDb.query(params).promise();
                 if (records.Items.length > 0) {
-                    let payload = records.Items.map(record => {
+                    let response = {
+                        SequenceNumber: 0}
+                    ;
+                    for (let record of records.Items) {
                         const data = JSON.stringify(record.record_payload.kinesis.data);
-                        return {
-                            Data: data,
-                            PartitionKey: crypto.createHash('sha256').update(data).digest("hex")
+                        while (true) {
+                            try {
+                                response = await kinesis.putRecord({
+                                    Data: data,
+                                    PartitionKey: record.record_payload.kinesis.partitionKey,
+                                    SequenceNumberForOrdering: response.SequenceNumber
+                                }).promise();
+                                break;
+                            } catch (error) {
+                                console.log(error)
+                                continue;
+                            }
                         }
-                    });
-                    while (true) {
-                        const results = await kinesis.putRecords({
-                            Records: payload,
-                            StreamName: process.env.PLAYBACK_STREAM
-                        }).promise();
-                        if (results.FailedRecordCount == 0) {
-                            break;
-                        }
-                        // something went wrong, resend the failed records
-                        payload = payload.filter((record, index) => {
-                            return results.Records[index].ErrorCode
-                        });
                     }
                     console.log(`${records.Items[0].event_time_slot}: ${records.Items[0].event_time_stamp} [${records.Items.length}]`)
                     if (!records.LastEvaluatedKey) {

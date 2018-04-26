@@ -3,7 +3,7 @@ service:
 
 provider:
   name: aws
-  runtime: nodejs6.10
+  runtime: nodejs8.10
   variableSyntax: "\\${{([\\s\\S]+?)}}" 
   stage: ${{opt:stage, 'dev'}}
   tracing: true 
@@ -41,10 +41,8 @@ provider:
 plugins:
   - serverless-plugin-tracing
   - serverless-apigw-binary
-  - serverless-webpack
 
 custom:
-  webpackIncludeModules: true
   apigwBinary:
     types:          
       - '*/*'
@@ -54,6 +52,12 @@ functions:
     handler: src/main/js/lambda/playback/index.handler
     timeout: 300 
     memorySize: 1500 
+
+  link:
+    handler: src/main/js/lambda/link/index.handler
+    timeout: 300 
+    memorySize: 1500 
+
   load:
     handler: src/main/js/lambda/load/index.handler
     events:
@@ -97,13 +101,24 @@ resources:
         AttributeDefinitions:
           - AttributeName: event_time_slot
             AttributeType: S
+          - AttributeName: event_id
+            AttributeType: S
           - AttributeName: event_time_stamp
             AttributeType: S
         KeySchema:
           - AttributeName: event_time_slot
             KeyType: HASH
-          - AttributeName: event_time_stamp
-            KeyType: RANGE
+          - AttributeName: "event_id"
+            KeyType: "RANGE"
+        LocalSecondaryIndexes:
+        - IndexName: "event_time_stamp"
+          KeySchema: 
+            - AttributeName: "event_time_slot"
+              KeyType: "HASH"
+            - AttributeName: event_time_stamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
         ProvisionedThroughput:
           ReadCapacityUnits: 10
           WriteCapacityUnits: 50
