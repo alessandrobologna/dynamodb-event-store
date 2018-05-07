@@ -40,13 +40,7 @@ provider:
           - Arn
 plugins:
   - serverless-plugin-tracing
-  - serverless-apigw-binary
-
-custom:
-  apigwBinary:
-    types:          
-      - '*/*'
-
+ 
 functions:
   playback:
     handler: src/main/js/lambda/playback/index.handler
@@ -62,8 +56,13 @@ functions:
     handler: src/main/js/lambda/load/index.handler
     events:
       - http:
-          path: track.gif
-          method: get
+          path: claps/create
+          method: post
+          integration: lambda
+          request:
+            template:
+              application/json: '{ "body" : $input.json(''$'') }'
+ 
   scan:
     handler: src/main/js/lambda/scan/index.handler
     timeout: 300 
@@ -121,7 +120,7 @@ resources:
             ProjectionType: ALL
         ProvisionedThroughput:
           ReadCapacityUnits: 10
-          WriteCapacityUnits: 50
+          WriteCapacityUnits: 25
     EventBuffer:
       Type: 'AWS::DynamoDB::Table'
       Properties:
@@ -133,8 +132,8 @@ resources:
           - AttributeName: partition_key
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 100
-          WriteCapacityUnits: 100
+          ReadCapacityUnits: 25
+          WriteCapacityUnits: 50
     EventStream:
       Type: AWS::Kinesis::Stream
       Properties:

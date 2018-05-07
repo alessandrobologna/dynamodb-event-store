@@ -2,7 +2,9 @@
 
 const AWSXRay = require('aws-xray-sdk-core');
 const AWS = AWSXRay.captureAWS(require('aws-sdk'));
-const uuidv4 = require('uuid/v4')
+const uuidv4 = require('uuid/v4');
+var randomstring = require('randomstring');
+
 const kinesis = new AWS.Kinesis({
     region: process.env.AWS_REGION
 });
@@ -11,20 +13,35 @@ const kinesis = new AWS.Kinesis({
  */
 
 exports.handler = (event, context, callback) => {
-	let response = {
-		statusCode: 200,
-		headers: {
-			'Content-Type': 'image/gif',
-			'Cache-Control': 'no-cache'
-		},
-		body: "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
-		isBase64Encoded: true
-	};
-	let requestData = event;
-    requestData['@timestamp'] = new Date().toISOString();
+    // generate a random message body if not provided
+    if (event.body && Object.keys(event.body).length === 0) {
+        event.body = {
+            'MessageType' : 'Claps',
+            'MemberId' : randomstring.generate({
+                length: 2,
+                charset: 'hex'
+            }),
+            'PostId' : randomstring.generate({
+                length: 2,
+                charset: 'hex'
+            }),
+            get EntityId() {
+                return `${this.MessageType}-${this.MemberId}-${this.PostId}`;
+            }
+        };
+    }
+    let response = {
+        statusCode: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+        },
+        body: event.body
+    };
+    event['@timestamp'] = new Date().toISOString();
     kinesis.putRecord({
-        Data: JSON.stringify(requestData),
-        PartitionKey: uuidv4(),
+        Data: JSON.stringify(event),
+        PartitionKey: event.body && event.body.EntityId || uuidv4(), // default to random uuid if no EntityId is provided 
         StreamName: process.env.EVENT_STREAM
     }).promise().then(data => {
         if (data.SequenceNumber) {
@@ -32,7 +49,7 @@ exports.handler = (event, context, callback) => {
         }
         callback(null, response);
     }).catch(error => {
-        console.error("Kinesis error", error);
+        console.error('Kinesis error', error);
         callback(error);
     });
 };

@@ -13,7 +13,8 @@
   },
   "homepage": "https://github.com/alessandrobologna/dynamodb-event-store#readme",
   "dependencies": {
-    "aws-xray-sdk": "^1.2.0"
+    "aws-xray-sdk": "^1.2.0",
+    "randomstring": "^1.1.5"
   },
   "devDependencies": {
     "aws-sdk": "^2.205.0",
